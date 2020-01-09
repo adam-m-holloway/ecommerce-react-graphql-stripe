@@ -1,0 +1,20 @@
+{
+  "defaultConnection": "default",
+  "connections": {
+    "default": {
+      "connector": "mongoose",
+      "settings": {
+        "database": "server",
+        "host": "ecommerce-react-graphql-stripe-bxxer.mongodb.net",
+        "srv": "true",
+        "port": 27017,
+        "username": "AdamH",
+        "password": "sFb3rWPLfND6Owee"
+      },
+      "options": {
+        "authenticationDatabase": "",
+        "ssl": true
+      }
+    }
+  }
+}
