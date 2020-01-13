@@ -107,7 +107,7 @@ export const App = () => {
                   </Text>
                   <Text>{brand.description}</Text>
                   <Text bold size="xl">
-                    <Link to={`/${brands._id}`}>See Brews</Link>
+                    <Link to={`/${brand._id}`}>See Brews</Link>
                   </Text>
                 </Box>
               </Card>
@@ -115,7 +115,6 @@ export const App = () => {
           ))}
         </Box>
       )}
-      ;
     </Container>
   );
 };

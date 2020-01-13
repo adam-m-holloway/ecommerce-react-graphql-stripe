@@ -3,7 +3,7 @@ import ReactDOM from 'react-dom';
 import { BrowserRouter as Router, Switch, Route } from 'react-router-dom';
 import 'gestalt/dist/gestalt.css';
 
-import { App, Signin, Signup, Checkout, Navbar } from './components';
+import { App, Signin, Signup, Checkout, Navbar, Brews } from './components';
 
 import registerServiceWorker from './registerServiceWorker';
 
@@ -16,6 +16,7 @@ const Root = () => (
         <Route component={Signin} path="/signin" />
         <Route component={Signup} path="/signup" />
         <Route component={Checkout} path="/checkout" />
+        <Route component={Brews} path="/:brandId" />
       </Switch>
     </>
   </Router>
