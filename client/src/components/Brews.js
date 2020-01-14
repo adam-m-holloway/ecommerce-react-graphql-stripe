@@ -10,6 +10,7 @@ import {
   IconButton
 } from 'gestalt';
 import { Link } from 'react-router-dom';
+import { calculatePrice, getCart, setCart } from '../utils';
 import Strapi from 'strapi-sdk-javascript/build/main';
 const apiUrl = process.env.API_URL || 'http://localhost:1337/';
 const strapi = new Strapi(apiUrl);
@@ -44,6 +45,7 @@ export const Brews = props => {
 
         setBrews(response.data.brand.brews);
         setBrand(response.data.brand.name);
+        setCartItems(getCart()); // get cart from localStorage
       } catch (err) {
         console.error(err);
       }
@@ -51,6 +53,13 @@ export const Brews = props => {
 
     fetchData();
   }, [props.match.params.brandId]);
+
+  // TODO: can this be improved?
+  useEffect(() => {
+    if (cartItems.length > 0) {
+      setCart(cartItems); // set items to localStorage
+    }
+  }, [cartItems]);
 
   const addToCart = brew => {
     const alreadyInCart = cartItems.findIndex(item => item._id === brew._id);
@@ -67,6 +76,11 @@ export const Brews = props => {
       updatedItems[alreadyInCart].quantity += 1;
       setCartItems(updatedItems);
     }
+  };
+
+  const deleteItemFromCart = itemToDeleteId => {
+    const filteredItems = cartItems.filter(item => item._id !== itemToDeleteId);
+    setCartItems(filteredItems);
   };
 
   return (
@@ -152,6 +166,7 @@ export const Brews = props => {
                   icon="cancel"
                   size="sm"
                   iconColor="red"
+                  onClick={() => deleteItemFromCart(item._id)}
                 />
               </Box>
             ))}
@@ -167,7 +182,7 @@ export const Brews = props => {
                   <Text color="red">Please select some items</Text>
                 )}
               </Box>
-              <Text size="lg">Total: $3.99</Text>
+              <Text size="lg">Total: {calculatePrice(cartItems)}</Text>
               <Text>
                 <Link to="/checkout">Checkout</Link>
               </Text>
