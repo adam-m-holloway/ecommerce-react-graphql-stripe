@@ -34,7 +34,7 @@ export const Signup = props => {
     event.preventDefault();
 
     if (isFormEmpty()) {
-      showToasts('Fill in all field');
+      showToasts('Fill in all field'); // error message to show if form is empty
     }
 
     // sign up user
@@ -72,6 +72,7 @@ export const Signup = props => {
 
   const isFormEmpty = () => !username || !email || !password;
 
+  // show error messages
   const showToasts = toastMessage => {
     console.log('showToasts');
     setShowToast(true);
