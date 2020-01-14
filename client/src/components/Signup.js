@@ -59,7 +59,8 @@ export const Signup = props => {
         setIsLoading(false);
 
         // show error message
-        showToast(err.message);
+        console.log('error msg:', err.message);
+        showToasts(err.message);
       }
     };
 
