@@ -70,7 +70,6 @@ export const Signin = props => {
 
   // show error messages
   const showToasts = toastMessage => {
-    console.log('showToasts');
     setShowToast(true);
     setToastMessage(toastMessage);
 

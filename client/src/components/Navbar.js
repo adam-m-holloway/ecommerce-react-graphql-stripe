@@ -6,7 +6,6 @@ import { getToken, clearToken, clearCart } from '../utils';
 // withRouter gives access to `history` in this instance (not always needed)
 export const Navbar = withRouter(props => {
   const handleSignout = () => {
-    console.log('handle sign out');
     clearToken();
     clearCart();
     props.history.push('/');
