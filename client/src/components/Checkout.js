@@ -1,5 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { Container, Box, Button, Heading, TextField, Text } from 'gestalt';
+import {
+  Container,
+  Box,
+  Button,
+  Heading,
+  TextField,
+  Text,
+  Modal,
+  Spinner
+} from 'gestalt';
 import { ToastMessage } from './ToastMessage';
 import { getCart, calculatePrice } from '../utils';
 import Strapi from 'strapi-sdk-javascript/build/main';
@@ -14,7 +23,8 @@ export const Checkout = () => {
   const [confirmationEmailAddress, setConfirmationEmailAddress] = useState('');
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
+  const [orderProcessing, setOrderProcessing] = useState(true);
+  const [modal, setModal] = useState(false);
 
   const handleChange = ({ event, value }) => {
     switch (event.target.name) {
@@ -39,42 +49,20 @@ export const Checkout = () => {
     setCartItems(getCart());
   }, []);
 
-  const handleConfirmOrder = event => {
+  const handleConfirmOrder = async event => {
     event.preventDefault();
 
     if (isFormEmpty()) {
       showToasts('Fill in all field'); // error message to show if form is empty
+      return;
     }
 
-    // sign up user
-    const signUpUser = async () => {
-      try {
-        // set loading to true
-        setIsLoading(true);
-
-        // make request to register user with strapi
-        // const response = await strapi.register(username, email, password);
-
-        // set loading to false
-        setIsLoading(false);
-
-        // put token (to manage user session) in local storage
-        //setToken(response.jwt);
-
-        // redirect user to home page
-        //redirectUser('/');
-      } catch (err) {
-        // set loading to false
-        setIsLoading(false);
-
-        // show error message
-        console.log('error msg:', err.message);
-        showToasts(err.message);
-      }
-    };
-
-    signUpUser();
+    setModal(true);
   };
+
+  const handleSubmitOrder = () => {};
+
+  const closeModal = () => setModal(false);
 
   const isFormEmpty = () =>
     !address || !postalCode || !city || !confirmationEmailAddress;
@@ -100,6 +88,7 @@ export const Checkout = () => {
         justifyContent="center"
       >
         <Heading color="midnight">Checkout</Heading>
+        {console.log('cart items length:', cartItems.length)}
         {cartItems.length > 0 ? (
           <>
             {/* User cart */}
@@ -150,7 +139,7 @@ export const Checkout = () => {
                 />
                 <TextField
                   id="postalCode"
-                  type="number"
+                  type="text"
                   name="postalCode"
                   placeholder="Postal Code"
                   onChange={handleChange}
@@ -169,12 +158,7 @@ export const Checkout = () => {
                   placeholder="Confirmation Email Address"
                   onChange={handleChange}
                 />
-                <Button
-                  text="Submit"
-                  color="blue"
-                  type="submit"
-                  disabled={isLoading}
-                />
+                <Button text="Submit" color="blue" type="submit" />
               </Box>
             </form>
           </>
@@ -186,7 +170,97 @@ export const Checkout = () => {
           </Box>
         )}
       </Box>
+
+      {/* Confirmation Modal */}
+      {modal && (
+        <ConfirmationModal
+          orderProcessing={orderProcessing}
+          cartItems={cartItems}
+          closeModal={closeModal}
+          handleSubmitOrder={handleSubmitOrder}
+        />
+      )}
+
       <ToastMessage show={showToast} message={toastMessage} />
     </Container>
   );
 };
+
+const ConfirmationModal = ({
+  orderProcessing,
+  cartItems,
+  closeModal,
+  handleSubmitOrder
+}) => (
+  <Modal
+    accessibilityCloseLabel="close"
+    accessibilityModalLabel="Confirm Your Order"
+    heading="Confirm Your Order"
+    role="alertdialog"
+    size="sm"
+    onDismiss={closeModal}
+    footer={
+      <Box
+        display="flex"
+        marginRight={-1}
+        marginLeft={-1}
+        justifyContent="center"
+      >
+        <Box padding={1}>
+          <Button
+            size="lg"
+            color="red"
+            text="Submit"
+            disabled={orderProcessing}
+            onClick={handleSubmitOrder}
+          ></Button>
+        </Box>
+        <Box padding={1}>
+          <Button
+            size="lg"
+            color="red"
+            text="Cancel"
+            disabled={orderProcessing}
+            onClick={closeModal}
+          ></Button>
+        </Box>
+      </Box>
+    }
+  >
+    {/* Order summary */}
+    {!orderProcessing && (
+      <Box
+        display="flex"
+        justifyContent="center"
+        alignItems="center"
+        direction="column"
+        padding={2}
+        color="lightWash"
+      >
+        {cartItems.map(item => (
+          <Box key={item._id} padding={1}>
+            <Text size="lg" color="red">
+              {item.name} x {item.quantity} = ${item.quantity * item.price}
+            </Text>
+          </Box>
+        ))}
+        <Box paddingY={2}>
+          <Text size="lg" bold>
+            Total: {calculatePrice(cartItems)}
+          </Text>
+        </Box>
+      </Box>
+    )}
+
+    {/* Order processing spinnner */}
+    <Spinner
+      show={orderProcessing}
+      accessibilityLabel="Order Processing Spinner"
+    />
+    {orderProcessing && (
+      <Text align="center" italic>
+        Submitting order...
+      </Text>
+    )}
+  </Modal>
+);
