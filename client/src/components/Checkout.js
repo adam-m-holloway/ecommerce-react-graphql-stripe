@@ -11,11 +11,17 @@ import {
 } from 'gestalt';
 import { ToastMessage } from './ToastMessage';
 import { getCart, calculatePrice } from '../utils';
+import {
+  Elements,
+  StripeProvider,
+  CardElement,
+  injectStripe
+} from 'react-stripe-elements';
 import Strapi from 'strapi-sdk-javascript/build/main';
 const apiUrl = process.env.API_URL || 'http://localhost:1337/';
 const strapi = new Strapi(apiUrl);
 
-export const Checkout = () => {
+const _CheckoutForm = () => {
   const [cartItems, setCartItems] = useState([]);
   const [address, setAddress] = useState('');
   const [postalCode, setPostalCode] = useState('');
@@ -120,7 +126,7 @@ export const Checkout = () => {
               style={{
                 display: 'inlineBlock',
                 textAlign: 'center',
-                maxWidth: 450
+                width: 450
               }}
               onSubmit={handleConfirmOrder}
             >
@@ -158,7 +164,19 @@ export const Checkout = () => {
                   placeholder="Confirmation Email Address"
                   onChange={handleChange}
                 />
-                <Button text="Submit" color="blue" type="submit" />
+                {/* Credit Card Element */}
+                <CardElement
+                  id="stripe__input"
+                  onReady={input => input.focus()}
+                />
+                <Button
+                  text="Submit"
+                  color="blue"
+                  id="stripe__button"
+                  type="submit"
+                >
+                  Submit
+                </Button>
               </Box>
             </form>
           </>
@@ -263,4 +281,14 @@ const ConfirmationModal = ({
       </Text>
     )}
   </Modal>
+);
+
+const CheckoutForm = injectStripe(_CheckoutForm);
+
+export const Checkout = () => (
+  <StripeProvider apiKey="pk_test_VzuPkvZL4yfrkrRuFLnJyuPC002yznaYWt">
+    <Elements>
+      <CheckoutForm />
+    </Elements>
+  </StripeProvider>
 );
