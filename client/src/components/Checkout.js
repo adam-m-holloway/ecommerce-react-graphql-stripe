@@ -10,18 +10,19 @@ import {
   Spinner
 } from 'gestalt';
 import { ToastMessage } from './ToastMessage';
-import { getCart, calculatePrice } from '../utils';
+import { getCart, calculatePrice, clearCart, calculateAmount } from '../utils';
 import {
   Elements,
   StripeProvider,
   CardElement,
   injectStripe
 } from 'react-stripe-elements';
+import { withRouter } from 'react-router-dom';
 import Strapi from 'strapi-sdk-javascript/build/main';
 const apiUrl = process.env.API_URL || 'http://localhost:1337/';
 const strapi = new Strapi(apiUrl);
 
-const _CheckoutForm = () => {
+const _CheckoutForm = props => {
   const [cartItems, setCartItems] = useState([]);
   const [address, setAddress] = useState('');
   const [postalCode, setPostalCode] = useState('');
@@ -29,7 +30,7 @@ const _CheckoutForm = () => {
   const [confirmationEmailAddress, setConfirmationEmailAddress] = useState('');
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
-  const [orderProcessing, setOrderProcessing] = useState(true);
+  const [orderProcessing, setOrderProcessing] = useState(false);
   const [modal, setModal] = useState(false);
 
   const handleChange = ({ event, value }) => {
@@ -66,7 +67,46 @@ const _CheckoutForm = () => {
     setModal(true);
   };
 
-  const handleSubmitOrder = () => {};
+  const handleSubmitOrder = async () => {
+    const amount = calculateAmount(cartItems);
+
+    // process order
+    setOrderProcessing(true);
+
+    // create stripe token
+    let token;
+
+    // create order with strapi SDI (make request to backend)
+    try {
+      const response = await props.stripe.createToken();
+      token = response.token.id;
+      await strapi.createEntry('orders', {
+        amount,
+        brews: cartItems,
+        city,
+        postalCode,
+        address,
+        token
+      });
+
+      // set order processing - false, set modal - false
+      setOrderProcessing(false);
+      setModal(false);
+
+      // clear user cart of brews
+      clearCart();
+
+      // show success toast
+      showToasts('Your order has been successfully submitted!', true);
+    } catch (err) {
+      // set order proccessing - flase, modal - false
+      setOrderProcessing(false);
+      setModal(false);
+
+      // show error toast
+      showToasts(err.message);
+    }
+  };
 
   const closeModal = () => setModal(false);
 
@@ -74,13 +114,15 @@ const _CheckoutForm = () => {
     !address || !postalCode || !city || !confirmationEmailAddress;
 
   // show error messages
-  const showToasts = toastMessage => {
+  const showToasts = (toastMessage, redirect = false) => {
     setShowToast(true);
     setToastMessage(toastMessage);
 
     setTimeout(() => {
       setShowToast(false);
       setToastMessage('');
+
+      redirect && props.history.push('/');
     }, 5000);
   };
 
@@ -283,7 +325,7 @@ const ConfirmationModal = ({
   </Modal>
 );
 
-const CheckoutForm = injectStripe(_CheckoutForm);
+const CheckoutForm = withRouter(injectStripe(_CheckoutForm));
 
 export const Checkout = () => (
   <StripeProvider apiKey="pk_test_VzuPkvZL4yfrkrRuFLnJyuPC002yznaYWt">
